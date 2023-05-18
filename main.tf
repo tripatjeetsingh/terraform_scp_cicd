@@ -18,6 +18,6 @@ resource "aws_s3_bucket" "new_bucket" {
   object_lock_enabled = false
 
   tags = {
-    Environment = "qa"
+    Environment = "prod"
   }
 }
