@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "new_bucket" {
-  bucket = "demo-github-action-tf-04203023"
+  bucket = "demo-github-action-tf-04203023_${timestamp()}"
 
   object_lock_enabled = false
 
