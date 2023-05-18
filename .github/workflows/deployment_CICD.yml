@@ -4,7 +4,7 @@ on:
     branches:
       - main # your "trunk" branch
   pull_request:
-    
+
 jobs:
   deploy-staging:
     name: Deploy SCPs to Staging
@@ -20,11 +20,6 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: us-east-2
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout
         uses: actions/checkout@v3
@@ -37,13 +32,13 @@ jobs:
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
         id: init
-        run: terraform init -input=false        
+        run: terraform init -input=false
         working-directory: ./terraform
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
         run: terraform plan -input=false
-        working-directory: ./terraform    
+        working-directory: ./terraform
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
         id: apply
@@ -63,11 +58,6 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: us-east-2
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout
         uses: actions/checkout@v3
@@ -80,13 +70,13 @@ jobs:
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
         id: init
-        run: terraform init -input=false        
+        run: terraform init -input=false
         working-directory: ./terraform
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
         run: terraform plan -input=false
-        working-directory: ./terraform    
+        working-directory: ./terraform
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
         id: apply
