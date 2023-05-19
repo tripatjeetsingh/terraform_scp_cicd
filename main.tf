@@ -12,12 +12,16 @@ provider "aws" {
   region = "us-east-2" # define region as per your account
 }
 
-resource "aws_s3_bucket" "new_bucket" {
-  bucket = "demo-github-action-tf-04203023"
-
-  object_lock_enabled = false
-
-  tags = {
-    Environment = "qa"
-  }
+#resource "aws_s3_bucket" "new_bucket" {
+#  bucket = "demo-github-action-tf-04203023"
+#
+#  object_lock_enabled = false
+#
+#  tags = {
+#    Environment = "qa"
+#  }
+#}
+resource "aws_instance" "server" {
+  ami           = "ami-08333bccc35d71140"
+  instance_type = "t2.micro"
 }
