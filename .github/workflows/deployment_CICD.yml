@@ -24,9 +24,10 @@ jobs:
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::742555182181:role/AWS_Github_OpenID_Staging_Role
+          #role-to-assume: arn:aws:iam::742555182181:role/AWS_Github_OpenID_Staging_Role
+          role-to-assume: arn:aws:iam::910164138727:role/AWS_Github_OpenID_Role
           role-duration-seconds: 900 # the ttl of the session, in seconds.
-          aws-region: us-east-2 # use your region here.      
+          aws-region: us-east-2 # use your region here.
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration.
       - name: Install Terraform
         run: |
@@ -40,11 +41,11 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
-        run: terraform plan -input=false
+        run: terraform plan -var='target_id' -var-file 'staging.tfvars'
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
         id: apply
-        run: terraform apply -auto-approve -input=false
+        run: terraform apply -auto-approve -var='target_id' -var-file 'staging.tfvars'
   deploy-production:
     name: Deploy SCPs to Production
     runs-on: ubuntu-latest
@@ -63,7 +64,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::910164138727:role/AWS_Github_OpenID_Role
           role-duration-seconds: 900 # the ttl of the session, in seconds.
-          aws-region: us-east-2 # use your region here.    
+          aws-region: us-east-2 # use your region here.
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration.
       - name: Install Terraform
         run: |
@@ -77,8 +78,8 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
-        run: terraform plan -input=false
+        run: terraform plan -var='target_id' -var-file 'production.tfvars'
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
         id: apply
-        run: terraform apply -auto-approve -input=false
+        run: terraform apply -auto-approve -var='target_id' -var-file 'production.tfvars'
