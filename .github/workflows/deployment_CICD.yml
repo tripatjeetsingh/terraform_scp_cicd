@@ -41,11 +41,11 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
-        run: terraform plan -var-file 'staging.tfvars'
+        run: terraform plan -var-file="staging.tfvars"
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
         id: apply
-        run: terraform apply -auto-approve -var-file 'staging.tfvars'
+        run: terraform apply -auto-approve -var-file="staging.tfvars"
   deploy-production:
     name: Deploy SCPs to Production
     runs-on: ubuntu-latest
@@ -78,8 +78,8 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Plan
         id: plan
-        run: terraform plan -var='target_id' -var-file 'production.tfvars'
+        run: terraform plan -var-file="production.tfvars"
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
         id: apply
-        run: terraform apply -auto-approve -var='target_id' -var-file 'production.tfvars'
+        run: terraform apply -auto-approve -var-file="production.tfvars"
