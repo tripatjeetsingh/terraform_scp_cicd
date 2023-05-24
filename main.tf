@@ -21,7 +21,15 @@ provider "aws" {
 #    Environment = "qa"
 #  }
 #}
-resource "aws_instance" "server" {
-  ami           = "ami-08333bccc35d71140"
-  instance_type = "t2.micro"
+#resource "aws_instance" "server" {
+#  ami           = "ami-08333bccc35d71140"
+#  instance_type = "t2.micro"
+#}
+
+## Deploy S3 AWS Org SCPs
+module "s3" {
+  source = "./modules/s3"
+
+  target_id       = var.target_id
+  region_lockdown = var.region_lockdown
 }
