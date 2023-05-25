@@ -3,6 +3,10 @@ on:
   #    branches:
   #      - main # your "trunk" branch
   pull_request:
+    branches:
+      - main
+    types: [reopened, opened, synchronize, edited]
+
 jobs:
   deploy-production:
     name: Deploy SCPs to Production
