@@ -3,9 +3,7 @@ on:
     branches:
       - main # your "trunk" branch
   pull_request:
-    branches:
-      - main
-    types: [opened, synchronize, closed]
+
 jobs:
   deploy-production:
     name: Deploy SCPs to Production
