@@ -1,7 +1,7 @@
 on:
-  push:
-    branches:
-      - main # your "trunk" branch
+  #  push:
+  #    branches:
+  #      - main # your "trunk" branch
   pull_request:
 jobs:
   deploy-production:
