@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "terraform_consolidated_s3_policy" {
 }
 
 resource "aws_organizations_policy" "terraform_consolidated_s3_policy" {
-  name        = "Terraform - consolidated S3 bucket service control policies"
+  name        = "Terraform - consolidated S3 bucket service control policies - testing"
   description = "Deny rules for s3 as per the approved UMB standards"
 
   content = data.aws_iam_policy_document.terraform_consolidated_s3_policy.json
