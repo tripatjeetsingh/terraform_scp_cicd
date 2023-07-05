@@ -94,6 +94,7 @@ resource "null_resource" "remove-scp" {
 }
 
 resource "aws_organizations_policy_attachment" "terraform_consolidated_s3_policy_attachment" {
-  policy_id = aws_organizations_policy.terraform_consolidated_s3_policy.id
-  target_id = var.target_id
+  policy_id  = aws_organizations_policy.terraform_consolidated_s3_policy.id
+  target_id  = var.target_id
+  depends_on = ["null_resource.remove-scp"]
 }
