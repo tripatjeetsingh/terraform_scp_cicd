@@ -35,6 +35,9 @@ jobs:
         id: init
         run: terraform init -input=false
       # On push to "main", build or change infrastructure according to Terraform configuration files
+      - name: Terraform Destroy
+        id: destroy
+        run: terraform apply -destroy
       - name: Terraform Apply
         id: apply
         run: terraform apply -auto-approve -var-file="production.tfvars"
