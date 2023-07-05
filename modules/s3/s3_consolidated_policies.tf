@@ -87,6 +87,12 @@ resource "aws_organizations_policy" "terraform_consolidated_s3_policy" {
   content = data.aws_iam_policy_document.terraform_consolidated_s3_policy.json
 }
 
+resource "null_resource" "remove-scp" {
+  provisioner "local-exec" {
+    command = "aws organizations detach-policy --policy-id ${aws_organizations_policy.terraform_consolidated_s3_policy.id} --target-id ${var.target_id}"
+  }
+}
+
 resource "aws_organizations_policy_attachment" "terraform_consolidated_s3_policy_attachment" {
   policy_id = aws_organizations_policy.terraform_consolidated_s3_policy.id
   target_id = var.target_id
