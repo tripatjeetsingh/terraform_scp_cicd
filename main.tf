@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket = "scp-cicd-terraform-remote-backend"
-    key    = "Default_SSE_S3"
+    key    = "scp-tf-state-file"
   }
 }
 
