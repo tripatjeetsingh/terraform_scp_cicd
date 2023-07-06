@@ -22,7 +22,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::910164138727:role/AWS_Github_OpenID_Role
-          role-duration-seconds: 600 # the ttl of the session, in seconds.
+          role-duration-seconds: 1000 # the ttl of the session, in seconds.
           aws-region: us-east-2 # use your region here.
       # Install the latest version of Terraform CLI and configure the Terraform CLI configuration.
       - name: Install Terraform
