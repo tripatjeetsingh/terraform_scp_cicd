@@ -5,6 +5,10 @@ terraform {
       version = ">=4.2.0"
     }
   }
+  backend "s3" {
+    bucket = "scp-cicd-terraform-remote-backend"
+    key    = "Default_SSE_S3"
+  }
 }
 
 # Configure the AWS Provider
