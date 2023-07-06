@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket = "scp-cicd-terraform-remote-backend"
-    #key    = ""
+    key    = "Default_SSE_S3"
   }
 }
 
