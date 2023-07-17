@@ -1,7 +1,7 @@
 #-----security_controls_scp/modules/s3/variables.tf----#
 variable "target_id" {
   description = "The Root ID, Organizational Unit ID, or AWS Account ID to apply SCPs."
-  type        = string
+  type        = list(string)
 }
 
 variable "region_lockdown" {
