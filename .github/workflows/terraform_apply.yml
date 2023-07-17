@@ -34,6 +34,7 @@ jobs:
       - name: Terraform Init
         id: init
         run: terraform init -input=false
+      # Destroying the existing Terraform scp infrastructure according to the Terraform remote state file
       - name: Terraform Destroy
         id: destroy
         run: terraform destroy -auto-approve -var-file="production.tfvars"
