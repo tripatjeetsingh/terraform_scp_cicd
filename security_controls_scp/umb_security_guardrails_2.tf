@@ -2,7 +2,7 @@
 data "aws_iam_policy_document" "umb_security_guardrails_2" {
   statement {
     sid       = "Requireec2volumeencryption"
-    actions   = ["ec2:AttachVolume", "ec2:CreateVolumet", "ec2:ImportInstance", "ec2:RunInstance"]
+    actions   = ["ec2:AttachVolume", "ec2:CreateVolume", "ec2:ImportInstance", "ec2:RunInstance"]
     resources = ["arn:aws:ec2:*:*:Volume/*", ]
     effect    = "Deny"
     condition {
