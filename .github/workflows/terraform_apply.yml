@@ -37,8 +37,13 @@ jobs:
         id: init
         run: terraform init -input=false
       # Destroying the existing Terraform scp infrastructure according to the Terraform remote state file
-      - name: Terraform Destroy
+      - name: Terraform Destroy - FeatureBranch
+        id: destroy_dryrun
+        if: github.ref == 'refs/heads/featurebranch' && github.event_name == 'push'
+        run: terraform apply -destroy -auto-approve -var-file="production.tfvars"
+      - name: Terraform Destroy - Main
         id: destroy
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform destroy -auto-approve -var-file="production.tfvars"
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply

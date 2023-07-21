@@ -17,10 +17,11 @@ provider "aws" {
   region = "us-east-2" # define region as per your account
 }
 
-## Deploy Security Control AWS Org SCPs for UMB
+# Deploy Security Control AWS Org SCPs for UMB
 module "security_controls_scp" {
   source = "./security_controls_scp"
 
   target_id       = var.target_id
   region_lockdown = var.region_lockdown
 }
+
