@@ -83,59 +83,6 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
       values   = ["false"]
     }
   }
-  # statement {
-  #   sid = "Preventlogsmodification"
-  #   effect = "Deny"
-  #   actions = [
-  #     "cloudtrail:DeleteTrail",
-  #     "cloudtrail:StopLogging",
-  #     "ec2:DeleteFlowlogs",
-  #     "logs:DeleteLogGroup",
-  #     "logs:DeleteLogStream"
-  #   ]
-
-  #   resources = [
-  #     "*",
-  #   ]
-  # }
-  # statement {
-  #   sid       = "Preventguarddutymodification"
-  #   effect    = "Deny"
-  #   resources = ["*"]
-  #   actions   = [
-  #        "guardduty:DeclineInvitations",
-  #        "guardduty:DeleteDetector",
-  #        "guardduty:CreateIPSet",
-  #        "guardduty:DisassociateFromMasterAccount",
-  #        "guardduty:UpdateDetector",
-  #        ]
-  # }
-  # statement {
-  #   sid       = "Preventconfigmodification"
-  #   effect    = "Deny"
-  #   resources = ["*"]
-  #   actions   = [
-  #        "config:DeleteConfigRule",
-  #        "config:DeleteConfigurationRecorder",
-  #        "config:DeleteDeliveryChannel",
-  #        "config:StopConfigurationRecorder"
-  #        ]
-  # }
-  # statement {
-  #   sid = "DenyCloudTrailActions"
-  #   effect = "Deny"
-  #   actions = [
-  #     "cloudtrail:DeleteTrail",
-  #     "cloudtrail:PutEventSelectors",
-  #     "cloudtrail:StopLogging",
-  #     "cloudtrail:UpdateTrail",
-  #     "cloudtrail:RemovedTags"
-  #   ]
-
-  #   resources = [
-  #     "arn:aws:s3:::aws-controltower-logs-xxxxxxxxxxxx-us-east-2*",
-  #   ]
-  # }
   statement {
     sid = "RequireIMDSv2"
 
@@ -364,21 +311,6 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
       ]
     }
   }
-  # statement {
-  #   sid       = "preventmodificationofs3bucketpolicy"
-  #   effect    = "Deny"
-  #   actions = [
-  #     "s3:PutBucketPolicy",
-  #     "s3:PutReplicationConfiguration",
-  #   ]
-  #   resources = ["arn:aws:s3:::your-bucket-name/*"]
-
-  #    condition {
-  #     test     = "StringNotLike"
-  #     variable = "aws:PrincipalArn"
-  #     values   = ["arn:aws:iam::*:role/*"]
-  #   }
-  # }
   statement {
     sid       = "s3blockpublicaccess"
     effect    = "Deny"
