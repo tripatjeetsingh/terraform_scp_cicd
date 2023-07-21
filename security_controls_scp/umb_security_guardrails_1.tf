@@ -1,92 +1,94 @@
-#-----security_controls_scp/modules/s3/deny_public_access_points.tf----#
-# This is the first set of service control policies consolidated into one policy document 'baseline guardrail policy-1' 
+# This is the first set of service control policies consolidated into one policy document 'baseline guardrail policy-1'
 data "aws_iam_policy_document" "umb_security_guardrails_1" {
-
   statement {
-    sid = "DenyReadWritePublicAccessBucketandAccount"
-    actions = [
-      "s3:PutAccountPublicAccessBlock",
-      "s3:GetAccountPublicAccessBlock",
-      "s3:PutBucketPublicAccessBlock",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:GetBucketPolicyStatus"
-    ]
-    resources = [
-      "arn:aws:s3:::*/*",
-    ]
-    effect = "Deny"
-  }
-
-  statement {
-    sid = "DenyPublicAccessPoints"
-
-    actions = [
-      "s3:CreateAccessPoint",
-      "s3:PutAccessPointPolicy",
-    ]
-    resources = [
-      "arn:aws:s3:*:*:accesspoint/*",
-    ]
-    effect = "Deny"
+    sid       = "donotattachedfulladminprivileges"
+    effect    = "Deny"
+    resources = ["*", ]
+    actions   = ["iam:PutUserPolicy", "iam:PutGroupPolicy", "iam:PutRolePolicy", ]
     condition {
-      test     = "StringNotEqualsIfExists"
-      variable = "s3:AccessPointNetworkOrigin"
-
-      values = [
-        "vpc",
-      ]
+      test     = "StringLike"
+      variable = "iam:PolicyDocument.Statement.Action"
+      values   = ["*:*", ]
     }
   }
-
   statement {
-    sid = "DenyUnencryptedUploads"
-    actions = [
-      "s3:PutObject",
-    ]
-    resources = [
-      "arn:aws:s3:::*/*",
-    ]
-    effect = "Deny"
+    sid       = "Denyattachuserpolicy"
+    effect    = "Deny"
+    actions   = ["iam:AttachUserPolicy", ]
+    resources = ["*", ]
+  }
+  statement {
+    sid       = "deniescreationofrootuseraccesskeys"
+    effect    = "Deny"
+    actions   = ["iam:CreateAccessKey", ]
+    resources = ["arn:aws:iam::*:root", ]
+  }
+  statement {
+    sid       = "Preventtherootuserfromperforminganyactions"
+    effect    = "Deny"
+    resources = ["*"]
+    actions   = ["*"]
     condition {
-      test     = "Null"
-      variable = "s3:x-amz-server-side-encryption"
-      values = [
-        "true",
-      ]
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:root"]
     }
   }
-
   statement {
-    sid = "DenyNoTLSRequests"
-
-    actions = [
-      "s3:*",
-    ]
-
-    resources = [
-      "arn:aws:s3:::*/*",
-    ]
-
-    effect = "Deny"
-
+    sid         = "DenymostActionsWithoutMFA"
+    effect      = "Deny"
+    resources   = ["*"]
+    not_actions = ["iam:CreateVirtualMFADevice", "iam:DeleteVirtualMFADevice", "iam:ListVirtualMFADevices", "iam:EnableMFADevice", "iam:ResyncMFADevice", "iam:ListAccountAliases", "iam:ListUsers", "iam:ListSSHPublicKeys", "iam:ListAccessKeys", "iam:ListServiceSpecificCredentials", "iam:ListMFADevices", "iam:GetAccountSummary", "sts:GetSessionToken", ]
+    condition {
+      test     = "BoolIfExists"
+      variable = "aws:MultiFactorAuthPresent"
+      values   = ["false"]
+    }
+    condition {
+      test     = "BoolIfExists"
+      variable = "aws:ViaAWSService"
+      values   = ["false"]
+    }
+  }
+  statement {
+    sid       = "RequireIMDSv2"
+    actions   = ["ec2:RunInstances", ]
+    resources = ["arn:aws:ec2:*:*:instance/*", ]
+    effect    = "Deny"
+    condition {
+      test     = "StringNotEquals"
+      variable = "ec2:MetadataHttpTokens"
+      values   = ["required", ]
+    }
+  }
+  statement {
+    sid       = "IMDSv2MaxHopLimit"
+    actions   = ["ec2:RunInstances", ]
+    resources = ["arn:aws:ec2:*:*:instance/*", ]
+    effect    = "Deny"
+    condition {
+      test     = "NumericGreaterThan"
+      variable = "ec2:MetadataHttpPutResponseHopLimit"
+      values   = [var.imdsv2_max_hop, ]
+    }
+  }
+  statement {
+    sid       = "RequireEC2snapshotencryption"
+    actions   = ["ec2:ImportSnapshot", "ec2:CreateSnapshot", "ec2:RestoreSnapshotFromRecycleBin", "ec2:RestoreSnapshotTier"]
+    resources = ["arn:aws:ec2:*:*:snapshot/*", ]
+    effect    = "Deny"
     condition {
       test     = "Bool"
-      variable = "aws:SecureTransport"
-
-      values = [
-        "false",
-      ]
+      variable = "ec2:Encrypted"
+      values   = ["false", ]
     }
   }
 }
-
 resource "aws_organizations_policy" "umb_security_guardrails_1" {
   name        = "UMB - Consolidated Security Control Baseline Guardrails-1"
   description = "Policy document to establish baseline security control guardrails for the UMB AWS environment"
-
-  content = data.aws_iam_policy_document.umb_security_guardrails_1.json
+  content     = data.aws_iam_policy_document.umb_security_guardrails_1.json
 }
-
 resource "aws_organizations_policy_attachment" "umb_security_guardrails_1_attachment" {
   policy_id = aws_organizations_policy.umb_security_guardrails_1.id
   count     = length(var.target_id)

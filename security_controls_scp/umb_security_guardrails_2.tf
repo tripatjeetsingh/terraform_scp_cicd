@@ -1,269 +1,58 @@
-#-----security_controls_scp/modules/s3/deny_public_access_points.tf----#
-# This is the first set of service control policies consolidated into one policy document 'baseline guardrail policy-1' 
+# This is the first set of service control policies consolidated into one policy document 'baseline guardrail policy-1'
 data "aws_iam_policy_document" "umb_security_guardrails_2" {
-
   statement {
-    sid       = "donotattachedfulladminprivileges"
+    sid       = "Requireec2volumeencryption"
+    actions   = ["ec2:AttachVolume", "ec2:CreateVolumet", "ec2:ImportInstance", "ec2:RunInstance"]
+    resources = ["arn:aws:ec2:*:*:Volume/*", ]
     effect    = "Deny"
-    resources = ["*", ]
-
-    actions = [
-      "iam:PutUserPolicy",
-      "iam:PutGroupPolicy",
-      "iam:PutRolePolicy",
-    ]
-
-    condition {
-      test     = "StringLike"
-      variable = "iam:PolicyDocument.Statement.Action"
-      values   = ["*:*", ]
-    }
-  }
-  statement {
-    sid    = "Denyattachuserpolicy"
-    effect = "Deny"
-    actions = [
-      "iam:AttachUserPolicy",
-    ]
-    resources = ["*", ]
-  }
-  statement {
-    sid    = "deniescreationofrootuseraccesskeys"
-    effect = "Deny"
-    actions = [
-      "iam:CreateAccessKey",
-    ]
-    resources = [
-      "arn:aws:iam::*:root",
-    ]
-  }
-
-  statement {
-    sid       = "Preventtherootuserfromperforminganyactions"
-    effect    = "Deny"
-    resources = ["*"]
-    actions   = ["*"]
-
-    condition {
-      test     = "ArnLike"
-      variable = "aws:PrincipalArn"
-      values   = ["arn:aws:iam::*:root"]
-    }
-  }
-  statement {
-    sid       = "DenymostActionsWithoutMFA"
-    effect    = "Deny"
-    resources = ["*"]
-
-    not_actions = [
-      "iam:CreateVirtualMFADevice",
-      "iam:DeleteVirtualMFADevice",
-      "iam:ListVirtualMFADevices",
-      "iam:EnableMFADevice",
-      "iam:ResyncMFADevice",
-      "iam:ListAccountAliases",
-      "iam:ListUsers",
-      "iam:ListSSHPublicKeys",
-      "iam:ListAccessKeys",
-      "iam:ListServiceSpecificCredentials",
-      "iam:ListMFADevices",
-      "iam:GetAccountSummary",
-      "sts:GetSessionToken",
-    ]
-
-    condition {
-      test     = "BoolIfExists"
-      variable = "aws:MultiFactorAuthPresent"
-      values   = ["false"]
-    }
-
-    condition {
-      test     = "BoolIfExists"
-      variable = "aws:ViaAWSService"
-      values   = ["false"]
-    }
-  }
-  statement {
-    sid = "RequireIMDSv2"
-
-    actions = [
-      "ec2:RunInstances"
-    ]
-
-    resources = [
-      "arn:aws:ec2:*:*:instance/*",
-    ]
-
-    effect = "Deny"
-
-    condition {
-      test     = "StringNotEquals"
-      variable = "ec2:MetadataHttpTokens"
-
-      values = [
-        "required",
-      ]
-    }
-  }
-  statement {
-    sid = "IMDSv2MaxHopLimit"
-
-    actions = [
-      "ec2:RunInstances"
-    ]
-
-    resources = [
-      "arn:aws:ec2:*:*:instance/*",
-    ]
-
-    effect = "Deny"
-
-    condition {
-      test     = "NumericGreaterThan"
-      variable = "ec2:MetadataHttpPutResponseHopLimit"
-
-      values = [
-        var.imdsv2_max_hop,
-      ]
-    }
-  }
-  statement {
-    sid = "RequireEC2snapshotencryption"
-
-    actions = [
-      "ec2:ImportSnapshot",
-      "ec2:CreateSnapshot",
-      "ec2:RestoreSnapshotFromRecycleBin",
-      "ec2:RestoreSnapshotTier"
-    ]
-
-    resources = [
-      "arn:aws:ec2:*:*:snapshot/*",
-    ]
-
-    effect = "Deny"
-
     condition {
       test     = "Bool"
       variable = "ec2:Encrypted"
-
-      values = [
-        "false",
-      ]
+      values   = ["false", ]
     }
   }
   statement {
-    sid = "Requireec2volumeencryption"
-
-    actions = [
-      "ec2:AttachVolume",
-      "ec2:CreateVolumet",
-      "ec2:ImportInstance",
-      "ec2:RunInstance"
-    ]
-
-    resources = [
-      "arn:aws:ec2:*:*:Volume/*",
-    ]
-
-    effect = "Deny"
-
-    condition {
-      test     = "Bool"
-      variable = "ec2:Encrypted"
-
-      values = [
-        "false",
-      ]
-    }
-  }
-  statement {
-    sid = "DenyEc2PublicIp"
-
-    actions = [
-      "ec2:RunInstances",
-    ]
-
-    resources = [
-      "arn:aws:ec2:*:*:network-interface/*",
-    ]
-
-    effect = "Deny"
-
+    sid       = "DenyEc2PublicIp"
+    actions   = ["ec2:RunInstances", ]
+    resources = ["arn:aws:ec2:*:*:network-interface/*", ]
+    effect    = "Deny"
     condition {
       test     = "Bool"
       variable = "ec2:AssociatePublicIpAddress"
-
-      values = [
-        "true",
-      ]
+      values   = ["true", ]
     }
   }
   statement {
-    sid = "DenyDirectInternetNotebook"
-
-    actions = [
-      "sagemaker:CreateNotebookInstance",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-    effect = "Deny"
-
+    sid       = "DenyDirectInternetNotebook"
+    actions   = ["sagemaker:CreateNotebookInstance", ]
+    resources = ["*", ]
+    effect    = "Deny"
     condition {
       test     = "StringNotEquals"
       variable = "sagemaker:DirectInternetAccess"
-
-      values = [
-        "Disabled",
-      ]
+      values   = ["Disabled", ]
     }
   }
   statement {
-    sid = "DenyRootAccess"
-
-    actions = [
-      "sagemaker:CreateNotebookInstance",
-      "sagemaker:UpdateNotebookInstance",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-    effect = "Deny"
-
+    sid       = "DenyRootAccess"
+    actions   = ["sagemaker:CreateNotebookInstance", "sagemaker:UpdateNotebookInstance", ]
+    resources = ["*", ]
+    effect    = "Deny"
     condition {
       test     = "StringNotEquals"
       variable = "sagemaker:RootAccess"
-
-      values = [
-        "Enabled",
-      ]
+      values   = ["Enabled", ]
     }
   }
   statement {
-    sid = "RequiresallSageMakerDomainstoroutetrafficthroughVPCs"
-
-    actions = [
-      "sagemaker:CreateDomain",
-    ]
-
-    resources = [
-      "*",
-    ]
-
-    effect = "Deny"
-
+    sid       = "RequiresallSageMakerDomainstoroutetrafficthroughVPCs"
+    actions   = ["sagemaker:CreateDomain", ]
+    resources = ["*", ]
+    effect    = "Deny"
     condition {
       test     = "StringEquals"
       variable = "sagemaker:AppNetworkAccessType"
-
-      values = [
-        "PublicInternetOnly",
-      ]
+      values   = ["PublicInternetOnly", ]
     }
   }
   statement {
@@ -271,7 +60,6 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
     effect    = "Deny"
     resources = ["*"]
     actions   = ["ec2:DisableEbsEncryptionByDefault"]
-
     condition {
       test     = "ArnNotLike"
       variable = "aws:PrincipalARN"
@@ -279,36 +67,20 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
     }
   }
   statement {
-    sid    = "DenyVpcFlowDelete"
-    effect = "Deny"
-    actions = [
-      "ec2:DeleteFlowLogs",
-      "logs:DeleteLogGroup",
-      "logs:DeleteLogStream",
-    ]
-
-    resources = [
-      "*",
-    ]
+    sid       = "DenyVpcFlowDelete"
+    effect    = "Deny"
+    actions   = ["ec2:DeleteFlowLogs", "logs:DeleteLogGroup", "logs:DeleteLogStream", ]
+    resources = ["*", ]
   }
   statement {
-    sid = "RequireS3SecureTransort"
-
-    actions = [
-      "s3:Put*",
-    ]
-
+    sid       = "RequireS3SecureTransort"
+    actions   = ["s3:Put*", ]
     resources = ["*", ]
-
-    effect = "Deny"
-
+    effect    = "Deny"
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
-
-      values = [
-        "True",
-      ]
+      values   = ["True", ]
     }
   }
   statement {
@@ -316,33 +88,21 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
     effect    = "Deny"
     resources = ["arn:aws:s3:::*"]
     actions   = ["s3:PutBucketPublicAccessBlock"]
-
     condition {
       test     = "StringEquals"
       variable = "s3:PublicAccessBlockConfiguration"
-      values = [
-        "true",
-      ]
+      values   = ["true", ]
     }
   }
   statement {
-    sid = "Requiresefsencryption"
-
-    actions = [
-      "elasticfilesystem:CreateFileSystem",
-    ]
-
+    sid       = "Requiresefsencryption"
+    actions   = ["elasticfilesystem:CreateFileSystem", ]
     resources = ["*", ]
-
-    effect = "Deny"
-
+    effect    = "Deny"
     condition {
       test     = "Bool"
       variable = "elasticfilesystem:Encrypted"
-
-      values = [
-        "false",
-      ]
+      values   = ["false", ]
     }
   }
   statement {
@@ -350,7 +110,6 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
     effect    = "Deny"
     resources = ["*"]
     actions   = ["s3:PutObject"]
-
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
@@ -358,35 +117,23 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
     }
   }
   statement {
-    sid    = "DenyDeletionOfCloudTrailS3Buckets"
-    effect = "Deny"
-    actions = [
-      "s3:Delete*"
-    ]
-    resources = [
-      "arn:aws:s3:::aws-controltower-logs-xxxxxxxxxxxx-us-east-2*"
-    ]
+    sid       = "DenyDeletionOfCloudTrailS3Buckets"
+    effect    = "Deny"
+    actions   = ["s3:Delete*"]
+    resources = ["arn:aws:s3:::aws-controltower-logs-xxxxxxxxxxxx-us-east-2*"]
   }
   statement {
     sid       = "preventDeletionOfKMS"
     effect    = "Deny"
     resources = ["*"]
-    actions = [
-      "kms:UntagResource",
-      "kms:Delete*",
-      "kms:ScheduleKeyDeletion"
-
-    ]
+    actions   = ["kms:UntagResource", "kms:Delete*", "kms:ScheduleKeyDeletion"]
   }
 }
-
 resource "aws_organizations_policy" "umb_security_guardrails_2" {
   name        = "UMB - Consolidated Security Control Baseline Guardrails-2"
   description = "Policy document to establish baseline security control guardrails for the UMB AWS environment"
-
-  content = data.aws_iam_policy_document.umb_security_guardrails_2.json
+  content     = data.aws_iam_policy_document.umb_security_guardrails_2.json
 }
-
 resource "aws_organizations_policy_attachment" "umb_security_guardrails_2_attachment" {
   policy_id = aws_organizations_policy.umb_security_guardrails_2.id
   count     = length(var.target_id)
