@@ -1,7 +1,7 @@
 # This is the first set of service control policies consolidated into one policy document 'baseline guardrail policy-1'
 data "aws_iam_policy_document" "umb_security_guardrails_1" {
   statement {
-    sid       = "donotattachedfulladminprivileges"
+    sid       = "DoNotAttachedFullAdminPrivileges"
     effect    = "Deny"
     resources = ["*", ]
     actions   = ["iam:PutUserPolicy", "iam:PutGroupPolicy", "iam:PutRolePolicy", ]
