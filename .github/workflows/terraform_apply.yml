@@ -49,5 +49,5 @@ jobs:
       - name: Terraform Apply
         id: apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply "tfplan" -auto-approve
+        run: terraform apply "tfplan"
         #run: terraform apply -auto-approve -var-file="production.tfvars"
