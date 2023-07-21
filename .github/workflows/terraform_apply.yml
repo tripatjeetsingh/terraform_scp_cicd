@@ -43,7 +43,7 @@ jobs:
       - name: Terraform Destroy - Main
         id: destroy
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform destroy -target="tfplan" -auto-approve
+        run: terraform destroy -auto-approve
         #run: terraform destroy -auto-approve -var-file="production.tfvars"
       # On push to "main", build or change infrastructure according to Terraform configuration files
       - name: Terraform Apply
