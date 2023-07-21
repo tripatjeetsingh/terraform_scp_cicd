@@ -73,7 +73,7 @@ data "aws_iam_policy_document" "umb_security_guardrails_1" {
     }
   }
   statement {
-    sid       = "RequireEC2snapshotEncryption"
+    sid       = "RequireEC2SnapshotEncryption"
     actions   = ["ec2:ImportSnapshot", "ec2:CreateSnapshot", "ec2:RestoreSnapshotFromRecycleBin", "ec2:RestoreSnapshotTier"]
     resources = ["arn:aws:ec2:*:*:snapshot/*", ]
     effect    = "Deny"

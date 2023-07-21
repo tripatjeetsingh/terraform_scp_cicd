@@ -44,4 +44,4 @@ jobs:
       # Generates an execution plan for Terraform
       - name: Terraform Destroy
         id: destroy
-        run: terraform plan -destroy -var-file="staging.tfvars" -out=destroyplan
+        run: terraform plan -destroy -var-file="staging.tfvars" -target="aws_organizations_policy.*.id"
