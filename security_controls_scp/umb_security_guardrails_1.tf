@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "umb_security_guardrails_1" {
     resources = ["*", ]
   }
   statement {
-    sid       = "deniescreationofrootuseraccesskeys"
+    sid       = "DeniesCreationOfrootuseraccesskeys"
     effect    = "Deny"
     actions   = ["iam:CreateAccessKey", ]
     resources = ["arn:aws:iam::*:root", ]
