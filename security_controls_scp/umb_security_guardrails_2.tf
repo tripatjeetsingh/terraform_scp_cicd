@@ -3,69 +3,355 @@
 data "aws_iam_policy_document" "umb_security_guardrails_2" {
 
   statement {
-    sid = "DenyReadWritePublicAccessBucketandAccount"
+    sid       = "donotattachedfulladminprivileges"
+    effect    = "Deny"
+    resources = ["*", ]
+
     actions = [
-      "s3:PutAccountPublicAccessBlock",
-      "s3:GetAccountPublicAccessBlock",
-      "s3:PutBucketPublicAccessBlock",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:GetBucketPolicyStatus"
+      "iam:PutUserPolicy",
+      "iam:PutGroupPolicy",
+      "iam:PutRolePolicy",
+    ]
+
+    condition {
+      test     = "StringLike"
+      variable = "iam:PolicyDocument.Statement.Action"
+      values   = ["*:*", ]
+    }
+  }
+  statement {
+    sid    = "Denyattachuserpolicy"
+    effect = "Deny"
+    actions = [
+      "iam:AttachUserPolicy",
+    ]
+    resources = ["*", ]
+  }
+  statement {
+    sid    = "deniescreationofrootuseraccesskeys"
+    effect = "Deny"
+    actions = [
+      "iam:CreateAccessKey",
     ]
     resources = [
-      "arn:aws:s3:::*/*",
+      "arn:aws:iam::*:root",
     ]
-    effect = "Deny"
   }
 
   statement {
-    sid = "DenyPublicAccessPoints"
+    sid       = "Preventtherootuserfromperforminganyactions"
+    effect    = "Deny"
+    resources = ["*"]
+    actions   = ["*"]
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:PrincipalArn"
+      values   = ["arn:aws:iam::*:root"]
+    }
+  }
+  statement {
+    sid       = "DenymostActionsWithoutMFA"
+    effect    = "Deny"
+    resources = ["*"]
+
+    not_actions = [
+      "iam:CreateVirtualMFADevice",
+      "iam:DeleteVirtualMFADevice",
+      "iam:ListVirtualMFADevices",
+      "iam:EnableMFADevice",
+      "iam:ResyncMFADevice",
+      "iam:ListAccountAliases",
+      "iam:ListUsers",
+      "iam:ListSSHPublicKeys",
+      "iam:ListAccessKeys",
+      "iam:ListServiceSpecificCredentials",
+      "iam:ListMFADevices",
+      "iam:GetAccountSummary",
+      "sts:GetSessionToken",
+    ]
+
+    condition {
+      test     = "BoolIfExists"
+      variable = "aws:MultiFactorAuthPresent"
+      values   = ["false"]
+    }
+
+    condition {
+      test     = "BoolIfExists"
+      variable = "aws:ViaAWSService"
+      values   = ["false"]
+    }
+  }
+  # statement {
+  #   sid = "Preventlogsmodification"
+  #   effect = "Deny"
+  #   actions = [
+  #     "cloudtrail:DeleteTrail",
+  #     "cloudtrail:StopLogging",
+  #     "ec2:DeleteFlowlogs",
+  #     "logs:DeleteLogGroup",
+  #     "logs:DeleteLogStream"
+  #   ]
+
+  #   resources = [
+  #     "*",
+  #   ]
+  # }
+  # statement {
+  #   sid       = "Preventguarddutymodification"
+  #   effect    = "Deny"
+  #   resources = ["*"]
+  #   actions   = [
+  #        "guardduty:DeclineInvitations",
+  #        "guardduty:DeleteDetector",
+  #        "guardduty:CreateIPSet",
+  #        "guardduty:DisassociateFromMasterAccount",
+  #        "guardduty:UpdateDetector",
+  #        ]
+  # }
+  # statement {
+  #   sid       = "Preventconfigmodification"
+  #   effect    = "Deny"
+  #   resources = ["*"]
+  #   actions   = [
+  #        "config:DeleteConfigRule",
+  #        "config:DeleteConfigurationRecorder",
+  #        "config:DeleteDeliveryChannel",
+  #        "config:StopConfigurationRecorder"
+  #        ]
+  # }
+  # statement {
+  #   sid = "DenyCloudTrailActions"
+  #   effect = "Deny"
+  #   actions = [
+  #     "cloudtrail:DeleteTrail",
+  #     "cloudtrail:PutEventSelectors",
+  #     "cloudtrail:StopLogging",
+  #     "cloudtrail:UpdateTrail",
+  #     "cloudtrail:RemovedTags"
+  #   ]
+
+  #   resources = [
+  #     "arn:aws:s3:::aws-controltower-logs-xxxxxxxxxxxx-us-east-2*",
+  #   ]
+  # }
+  statement {
+    sid = "RequireIMDSv2"
 
     actions = [
-      "s3:CreateAccessPoint",
-      "s3:PutAccessPointPolicy",
+      "ec2:RunInstances"
     ]
+
     resources = [
-      "arn:aws:s3:*:*:accesspoint/*",
+      "arn:aws:ec2:*:*:instance/*",
     ]
+
     effect = "Deny"
+
     condition {
-      test     = "StringNotEqualsIfExists"
-      variable = "s3:AccessPointNetworkOrigin"
+      test     = "StringNotEquals"
+      variable = "ec2:MetadataHttpTokens"
 
       values = [
-        "vpc",
+        "required",
       ]
     }
   }
-
   statement {
-    sid = "DenyUnencryptedUploads"
+    sid = "IMDSv2MaxHopLimit"
+
     actions = [
-      "s3:PutObject",
+      "ec2:RunInstances"
     ]
+
     resources = [
-      "arn:aws:s3:::*/*",
+      "arn:aws:ec2:*:*:instance/*",
     ]
+
     effect = "Deny"
+
     condition {
-      test     = "Null"
-      variable = "s3:x-amz-server-side-encryption"
+      test     = "NumericGreaterThan"
+      variable = "ec2:MetadataHttpPutResponseHopLimit"
+
+      values = [
+        var.imdsv2_max_hop,
+      ]
+    }
+  }
+  statement {
+    sid = "RequireEC2snapshotencryption"
+
+    actions = [
+      "ec2:ImportSnapshot",
+      "ec2:CreateSnapshot",
+      "ec2:RestoreSnapshotFromRecycleBin",
+      "ec2:RestoreSnapshotTier"
+    ]
+
+    resources = [
+      "arn:aws:ec2:*:*:snapshot/*",
+    ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "Bool"
+      variable = "ec2:Encrypted"
+
+      values = [
+        "false",
+      ]
+    }
+  }
+  statement {
+    sid = "Requireec2volumeencryption"
+
+    actions = [
+      "ec2:AttachVolume",
+      "ec2:CreateVolumet",
+      "ec2:ImportInstance",
+      "ec2:RunInstance"
+    ]
+
+    resources = [
+      "arn:aws:ec2:*:*:Volume/*",
+    ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "Bool"
+      variable = "ec2:Encrypted"
+
+      values = [
+        "false",
+      ]
+    }
+  }
+  statement {
+    sid = "DenyEc2PublicIp"
+
+    actions = [
+      "ec2:RunInstances",
+    ]
+
+    resources = [
+      "arn:aws:ec2:*:*:network-interface/*",
+    ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "Bool"
+      variable = "ec2:AssociatePublicIpAddress"
+
       values = [
         "true",
       ]
     }
   }
-
   statement {
-    sid = "DenyNoTLSRequests"
+    sid = "DenyDirectInternetNotebook"
 
     actions = [
-      "s3:*",
+      "sagemaker:CreateNotebookInstance",
     ]
 
     resources = [
-      "arn:aws:s3:::*/*",
+      "*",
     ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "sagemaker:DirectInternetAccess"
+
+      values = [
+        "Disabled",
+      ]
+    }
+  }
+  statement {
+    sid = "DenyRootAccess"
+
+    actions = [
+      "sagemaker:CreateNotebookInstance",
+      "sagemaker:UpdateNotebookInstance",
+    ]
+
+    resources = [
+      "*",
+    ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "sagemaker:RootAccess"
+
+      values = [
+        "Enabled",
+      ]
+    }
+  }
+  statement {
+    sid = "RequiresallSageMakerDomainstoroutetrafficthroughVPCs"
+
+    actions = [
+      "sagemaker:CreateDomain",
+    ]
+
+    resources = [
+      "*",
+    ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "StringEquals"
+      variable = "sagemaker:AppNetworkAccessType"
+
+      values = [
+        "PublicInternetOnly",
+      ]
+    }
+  }
+  statement {
+    sid       = "PreventdisablingdefaultEBSencryption"
+    effect    = "Deny"
+    resources = ["*"]
+    actions   = ["ec2:DisableEbsEncryptionByDefault"]
+
+    condition {
+      test     = "ArnNotLike"
+      variable = "aws:PrincipalARN"
+      values   = ["arn:aws:iam::*:role/[ALLOWED_ROLE_NAME]"]
+    }
+  }
+  statement {
+    sid    = "DenyVpcFlowDelete"
+    effect = "Deny"
+    actions = [
+      "ec2:DeleteFlowLogs",
+      "logs:DeleteLogGroup",
+      "logs:DeleteLogStream",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+  statement {
+    sid = "RequireS3SecureTransort"
+
+    actions = [
+      "s3:Put*",
+    ]
+
+    resources = ["*", ]
 
     effect = "Deny"
 
@@ -74,9 +360,91 @@ data "aws_iam_policy_document" "umb_security_guardrails_2" {
       variable = "aws:SecureTransport"
 
       values = [
+        "True",
+      ]
+    }
+  }
+  # statement {
+  #   sid       = "preventmodificationofs3bucketpolicy"
+  #   effect    = "Deny"
+  #   actions = [
+  #     "s3:PutBucketPolicy",
+  #     "s3:PutReplicationConfiguration",
+  #   ]
+  #   resources = ["arn:aws:s3:::your-bucket-name/*"]
+
+  #    condition {
+  #     test     = "StringNotLike"
+  #     variable = "aws:PrincipalArn"
+  #     values   = ["arn:aws:iam::*:role/*"]
+  #   }
+  # }
+  statement {
+    sid       = "s3blockpublicaccess"
+    effect    = "Deny"
+    resources = ["arn:aws:s3:::*"]
+    actions   = ["s3:PutBucketPublicAccessBlock"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:PublicAccessBlockConfiguration"
+      values = [
+        "true",
+      ]
+    }
+  }
+  statement {
+    sid = "Requiresefsencryption"
+
+    actions = [
+      "elasticfilesystem:CreateFileSystem",
+    ]
+
+    resources = ["*", ]
+
+    effect = "Deny"
+
+    condition {
+      test     = "Bool"
+      variable = "elasticfilesystem:Encrypted"
+
+      values = [
         "false",
       ]
     }
+  }
+  statement {
+    sid       = "requireS3encryptedObjectUploads"
+    effect    = "Deny"
+    resources = ["*"]
+    actions   = ["s3:PutObject"]
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "s3:x-amz-server-side-encryption"
+      values   = ["aws:kms"]
+    }
+  }
+  statement {
+    sid    = "DenyDeletionOfCloudTrailS3Buckets"
+    effect = "Deny"
+    actions = [
+      "s3:Delete*"
+    ]
+    resources = [
+      "arn:aws:s3:::aws-controltower-logs-xxxxxxxxxxxx-us-east-2*"
+    ]
+  }
+  statement {
+    sid       = "preventDeletionOfKMS"
+    effect    = "Deny"
+    resources = ["*"]
+    actions = [
+      "kms:UntagResource",
+      "kms:Delete*",
+      "kms:ScheduleKeyDeletion"
+
+    ]
   }
 }
 
