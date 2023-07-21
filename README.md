@@ -1,6 +1,17 @@
 # UMB - Terraform AWS Service Control Policies
 
-This repo is a collection of AWS Service Control Policies (SCPs) written in Hashicorp Terraform to be used in AWS Organizations.
+This repository is a collection of AWS Service Control Policies (SCPs) written in Hashicorp Terraform to be used in UMB AWS Organizations.
+
+UMB adopts three sources to establish a security control baseline for its AWS environment:
+
+- CIS Amazon Web Services Foundations Benchmark (Current version 1.4)
+- PCI-DSS (For accounts labled CDE)
+- AWS Foundational Security Best Practices
+
+These security controls are also referred to as guardrails.
+
+Wherever possible, guardrails will be implemented on a preventative basis. These will take the form of either a Service Control Policy or AWS Config Rule with Auto-Remediation. Alternatively, a standard AWS Config Rule will be implemented when a preventative rule may not be technically possible or feasible. In these cases an alert and notification to the resource owner would be implemented in order for the control deviation to be corrected.
+
 
 ## About Service Control Policies
 

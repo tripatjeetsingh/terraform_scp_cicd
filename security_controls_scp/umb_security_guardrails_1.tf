@@ -1,6 +1,6 @@
 #-----security_controls_scp/modules/s3/deny_public_access_points.tf----#
-
-data "aws_iam_policy_document" "terraform_consolidated_s3_policy" {
+# This is the first set of service control policies consolidated into one policy document 'baseline guardrail policy-1' 
+data "aws_iam_policy_document" "umb_security_guardrails_1" {
 
   statement {
     sid = "DenyReadWritePublicAccessBucketandAccount"
@@ -80,15 +80,15 @@ data "aws_iam_policy_document" "terraform_consolidated_s3_policy" {
   }
 }
 
-resource "aws_organizations_policy" "terraform_consolidated_s3_policy" {
-  name        = "Terraform - consolidated S3 bucket service control policies"
-  description = "Deny rules for s3 as per the approved UMB standards"
+resource "aws_organizations_policy" "umb_security_guardrails_1" {
+  name        = "UMB - Consolidated Security Control Baseline Guardrails-1"
+  description = "Policy document to establish baseline security control guardrails for the UMB AWS environment"
 
-  content = data.aws_iam_policy_document.terraform_consolidated_s3_policy.json
+  content = data.aws_iam_policy_document.umb_security_guardrails_1.json
 }
 
-resource "aws_organizations_policy_attachment" "terraform_consolidated_s3_policy_attachment" {
-  policy_id = aws_organizations_policy.terraform_consolidated_s3_policy.id
-  count = length(var.target_id)
+resource "aws_organizations_policy_attachment" "umb_security_guardrails_1_attachment" {
+  policy_id = aws_organizations_policy.umb_security_guardrails_1.id
+  count     = length(var.target_id)
   target_id = var.target_id[count.index]
 }
