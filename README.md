@@ -38,40 +38,38 @@ Wherever possible, guardrails will be implemented on a preventative basis. These
 
 ## Content
 
-- The [security_controls_scp](security_controls_scp/) folder is a modularized grouping of AWS Security Best Practices to control at the AWS Organizations level.
-  - __NOTICE:__ Due to the limitations of Service Control Policies, only a max of 5 may be attached at one time. With that in mind, you cannot apply ALL of the security controls at once (in their current modularized format). All of the SCPs will attempt to attach to one target ID and will fail. You have a couple of options:
-    - Select the `aws_iam_policy_document` you want and combine into one large data document.
-    - Pick and choose 5 modules to deploy and remove the others.
-    - Remove `aws_organizations_policy_attachment` from the modules' `main.tf` file and apply. You would then need to manually attach the SCPs.
-- The [compliance_scp](compliance_scp/) folder is a collection of compliance-flavored SCPs. These SCPs only allow AWS services that are compliant with the respective compliance framework. All SCP JSON files are sourced from Salesforce's [aws-allowlister](https://github.com/salesforce/aws-allowlister) repository which updates via a weekly cronjob.
-
-
+- The [security_controls_scp](security_controls_scp/) folder is a grouping of AWS Security Best Practices to control at the AWS Organizations level.
+  - __NOTICE:__ Due to the limitations of Service Control Policies, only a max of 5 may be attached at a given target OU. With that in mind, we have consolidated the security control policies into `umb_security_guardrails_1` and `umb_security_guardrails_2`. The maximum size for these SCPs policy documents is 5,120 bytes. You have a couple of options:
+    - Select the `aws_iam_policy_document` you want and add/remove the policies.
+    - With every policy addition, ensure that the size of the file does not exceed 5,120 bytes before you commit the code.
+    - Add another `aws_iam_policy_document` and name it as `umb_security_guardrails_$sequence` if the other documents have already reached their max size.
+  
 ## Usage
 
-An example main.tf for the module to deny the ability to delete CloudTrail Trails:
+An example main.tf for the SCP module that will be applied to the target OU's defined in the variable target_id:
 
 ```hcl
-module "cloudtrail" {
-  source      = "./modules/cloudtrail"
+module "security_controls_scp" {
+  source = "./security_controls_scp"
 
-  target_id = "123456789012"
-  aws_region = "us-east-1"
-  shared_credentials_file = "~/.aws/credentials"
-  customprofile = "default"
+  target_id       = var.target_id
+  region_lockdown = var.region_lockdown
 }
 ```
 ### Deployment
 
-To Deploy all of the AWS security best practice SCPs navigate to [__security_controls_scp__](./security_controls_scp):
-- `terraform init` to get the plugins.
-- `terraform plan` to verify your resource planning.
-- `terraform apply` to apply your SCPs.
+To Deploy all of the security control baseline policies, we use GitHub Actions workflow:
+- In order to create the action workflow for push/pull request, the following terraform workflow `terraform_plan.yml` and `terraform_apply.yml` script is configured in the “.github/workflows directory.
+- On execution of a GitHub push, it triggers the `terraform_plan.yml` workflow on the `featurebranch` & prepares the build, starts the terraform deployment lifecycle with “terraform init & plan” steps. The results appear as followed.
+```
+image.png
+```
+- When a new GitHub pull request is created, it initiates `terraform_apply.yml` action workflow on the `featurebranch`. Upon review and approval, starts the terraform deployment lifecycle with “terraform init & apply” steps to the `featurebranch`.
+- The changes can now be merged to the `main` branch. It requires a peer approval and triggers the `terraform_apply.yml` workflow on the main branch 
+```
+image.png
+```
 
-You will receive an error related similar to `ConstraintViolationException: You have attached the maximum number of policies to the specified target.` when you deploy ALL of the security related SCPs. We recommend only deploying the SCPs you need by leveraging the `-target` flag in your `terraform apply` command. An example command to deploy only the S3 and Lambda SCPs is below:
-- `terraform apply -target=module.s3 -target=module.lambda`
-
-To Remove the SCPs:
-- `terraform destroy` to destroy the deployed policies.
 
 ### Deployment Dependencies
 
