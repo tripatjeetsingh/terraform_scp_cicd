@@ -83,6 +83,17 @@ data "aws_iam_policy_document" "umb_security_guardrails_1" {
       values   = ["false", ]
     }
   }
+  statement {
+    sid       = "RequireEC2SnapshotEncryption"
+    actions   = ["ec2:ImportSnapshot", "ec2:CreateSnapshot", "ec2:RestoreSnapshotFromRecycleBin", "ec2:RestoreSnapshotTier"]
+    resources = ["arn:aws:ec2:*:*:snapshot/*", ]
+    effect    = "Deny"
+    condition {
+      test     = "Bool"
+      variable = "ec2:Encrypted"
+      values   = ["false", ]
+    }
+  }
 }
 resource "aws_organizations_policy" "umb_security_guardrails_1" {
   name        = "UMB - Consolidated Security Control Baseline Guardrails-1"
